@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -64,5 +66,31 @@ public class UserController {
             @PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.ok("Usuario eliminado");
+    }
+
+    @Operation(summary = "Cambiar contraseña")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contraseña actualizada"),
+            @ApiResponse(responseCode = "401", description = "Contraseña actual incorrecta"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(@Parameter(description = "ID del usuario", example = "1")
+              @PathVariable Long id,
+              @RequestBody String currentPassword,
+              @RequestBody String newPassword) {
+        userService.changePassword(id, currentPassword, newPassword);
+        return ResponseEntity.ok("Contraseña actualizada con éxito");
+    }
+
+    @Operation(summary = "Obtener usuario por token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<?> getUserFromToken(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        return ResponseEntity.ok(userService.findByEmail(email));
     }
 }

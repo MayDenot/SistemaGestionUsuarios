@@ -1,12 +1,15 @@
 package com.example.gestionusuarios.service;
 
 import com.example.gestionusuarios.dto.request.UserRequestDTO;
+import com.example.gestionusuarios.dto.response.AuthResponse;
 import com.example.gestionusuarios.dto.response.UserResponseDTO;
 import com.example.gestionusuarios.entity.User;
+import com.example.gestionusuarios.exception.InvalidPasswordException;
 import com.example.gestionusuarios.exception.UserNotFoundException;
 import com.example.gestionusuarios.mapper.UserMapper;
 import com.example.gestionusuarios.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.gestionusuarios.security.JwtService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Transactional(readOnly = true)
     public List<UserResponseDTO> findAll() {
@@ -51,5 +56,27 @@ public class UserService {
             throw new UserNotFoundException(id); // 404
         }
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void changePassword(Long id, String currentPassword, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponseDTO findByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+        return UserMapper.toResponse(user);
     }
 }

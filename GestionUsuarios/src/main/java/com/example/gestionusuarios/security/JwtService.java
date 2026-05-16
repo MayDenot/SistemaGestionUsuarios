@@ -1,5 +1,6 @@
 package com.example.gestionusuarios.security;
 
+import com.example.gestionusuarios.dto.response.UserResponseDTO;
 import com.example.gestionusuarios.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
