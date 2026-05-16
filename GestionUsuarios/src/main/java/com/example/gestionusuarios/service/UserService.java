@@ -1,7 +1,6 @@
 package com.example.gestionusuarios.service;
 
 import com.example.gestionusuarios.dto.request.UserRequestDTO;
-import com.example.gestionusuarios.dto.response.AuthResponse;
 import com.example.gestionusuarios.dto.response.UserResponseDTO;
 import com.example.gestionusuarios.entity.User;
 import com.example.gestionusuarios.exception.InvalidPasswordException;
@@ -9,13 +8,14 @@ import com.example.gestionusuarios.exception.UserNotFoundException;
 import com.example.gestionusuarios.mapper.UserMapper;
 import com.example.gestionusuarios.repository.UserRepository;
 import com.example.gestionusuarios.security.JwtService;
+import com.example.gestionusuarios.specification.UserSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +25,14 @@ public class UserService {
     private final JwtService jwtService;
 
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAll() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(UserMapper::toResponse).collect(Collectors.toList());
+    public Page<UserResponseDTO> findAll(String name, String email, String role, Pageable pageable) {
+        Specification<User> spec = Specification
+                .where(UserSpecification.hasName(name))
+                .and(UserSpecification.hasEmail(email))
+                .and(UserSpecification.hasRole(role));
+
+        return userRepository.findAll(spec, pageable)
+                .map(UserMapper::toResponse);
     }
 
     @Transactional(readOnly = true)

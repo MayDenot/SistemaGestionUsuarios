@@ -1,5 +1,6 @@
 package com.example.gestionusuarios.controller;
 
+import com.example.gestionusuarios.dto.request.ChangePasswordRequest;
 import com.example.gestionusuarios.dto.request.UserRequestDTO;
 import com.example.gestionusuarios.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +28,19 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    @Operation(summary = "Obtener todos los usuarios")
-    @ApiResponse(responseCode = "200", description = "Lista de usuarios")
+    @Operation(summary = "Obtener todos los usuarios con filtros y paginación")
     @GetMapping
-    public ResponseEntity<?> findAll() {
-        return ResponseEntity.ok(userService.findAll());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String role,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "name") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return ResponseEntity.ok(userService.findAll(name, email, role, pageable));
     }
 
     @Operation(summary = "Obtener usuario por ID")
@@ -36,6 +49,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> findById(@Valid
             @Parameter(description = "ID del usuario", example = "1")
             @PathVariable Long id) {
@@ -48,6 +62,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> update(@Valid
             @Parameter(description = "ID del usuario", example = "1") @PathVariable Long id,
             @Valid @RequestBody UserRequestDTO dto) {
@@ -61,6 +76,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> delete(@Valid
             @Parameter(description = "ID del usuario", example = "1")
             @PathVariable Long id) {
@@ -75,11 +91,10 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @PutMapping("/{id}/password")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> changePassword(@Parameter(description = "ID del usuario", example = "1")
-              @PathVariable Long id,
-              @RequestBody String currentPassword,
-              @RequestBody String newPassword) {
-        userService.changePassword(id, currentPassword, newPassword);
+              @PathVariable Long id, @RequestBody ChangePasswordRequest dto) {
+        userService.changePassword(id, dto.getCurrentPassword(), dto.getNewPassword());
         return ResponseEntity.ok("Contraseña actualizada con éxito");
     }
 
@@ -89,6 +104,7 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserFromToken(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         return ResponseEntity.ok(userService.findByEmail(email));
