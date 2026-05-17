@@ -2,7 +2,8 @@ import {useAuth} from "../hooks/useAuth.ts";
 import {useState} from "react";
 import { useNavigate, Link } from 'react-router-dom'
 import type {AuthResponse, LoginRequest} from "../types";
-import api from "../api/axiosConfig.ts";
+import api, {type CustomAxiosRequestConfig} from "../api/axiosConfig";
+import { toast } from "sonner";
 
 export const LoginPage = () => {
     const { login } = useAuth();
@@ -12,8 +13,6 @@ export const LoginPage = () => {
         email: '',
         password: '',
     });
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({...form, [e.target.name]: e.target.value});
@@ -21,19 +20,15 @@ export const LoginPage = () => {
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
-        setError(null);
-        setLoading(true);
 
         try {
-            const response = await api.post<AuthResponse>('/auth/login', form);
+            const response = await api.post<AuthResponse>('/auth/login', form, {skipGlobalLoading: true} as CustomAxiosRequestConfig);
             const { accessToken, refreshToken, user } = response.data;
 
             login(accessToken, refreshToken, user);
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data || 'Error al iniciar sesión');
-        } finally {
-            setLoading(false);
+            toast.error("Error al iniciar sesión")
         }
     }
 
@@ -43,10 +38,6 @@ export const LoginPage = () => {
                 <h2 className="text-2xl font-bold text-black mb-6 text-center">
                     Iniciar sesión
                 </h2>
-
-                {error && (
-                    <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -81,10 +72,17 @@ export const LoginPage = () => {
 
                     <button
                         type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                        {loading ? 'Cargando...' : 'Ingresar'}
+                        className="
+                            w-full
+                            bg-blue-600
+                            text-white
+                            py-2
+                            rounded-lg
+                            hover:bg-blue-700
+                            transition
+                            cursor-pointer
+                        ">
+                        Ingresar
                     </button>
                 </form>
 

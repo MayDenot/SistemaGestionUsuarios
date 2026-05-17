@@ -1,35 +1,43 @@
 import './App.css'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from "./pages/ProfilePage.tsx";
+import {useLoading} from "./context/LoadingContext.tsx";
+import FullScreenLoader from "./components/FullScreenLoader.tsx";
+import { Toaster } from "sonner";
 
 function App() {
+  const { loading } = useLoading();
 
   return (
-    <AuthProvider>
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+      <BrowserRouter>
+          {loading && <FullScreenLoader/>}
 
-                {/* Ruta protegida - redirige a login si no hay token */}
-                <Route path="/dashboard" element={
-                    <PrivateRoute>
-                        <DashboardPage />
-                    </PrivateRoute>
-                }/>
+          <Toaster
+              position="top-right"
+              richColors
+          />
 
-                <Route path="/me" element={<ProfilePage />} />
+          <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-                {/* Cualquier ruta desconocida redirige a login */}
-                <Route path="*" element={<Navigate to="/login"/>} />
-            </Routes>
-        </BrowserRouter>
-    </AuthProvider>
+              {/* Ruta protegida - redirige a login si no hay token */}
+              <Route path="/dashboard" element={
+                  <PrivateRoute>
+                      <DashboardPage />
+                  </PrivateRoute>
+              }/>
+
+              <Route path="/me" element={<ProfilePage />} />
+
+              {/* Cualquier ruta desconocida redirige a login */}
+              <Route path="*" element={<Navigate to="/login"/>} />
+          </Routes>
+      </BrowserRouter>
   )
 }
 

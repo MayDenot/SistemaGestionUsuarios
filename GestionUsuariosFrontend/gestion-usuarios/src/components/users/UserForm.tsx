@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type {User, UserRequestDTO} from '../../types';
 import api from '../../api/axiosConfig';
+import { toast } from "sonner";
 
 interface Props {
     user?: User,
@@ -14,7 +15,6 @@ const UserForm = ({user, onClose, onSuccess}: Props) => {
         email: user?.email ?? '',
     });
 
-    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,7 +23,6 @@ const UserForm = ({user, onClose, onSuccess}: Props) => {
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
-        setError(null);
         setLoading(true);
 
         try {
@@ -33,8 +32,17 @@ const UserForm = ({user, onClose, onSuccess}: Props) => {
                 await api.post(`/users`, form);
             }
             onSuccess()
+
+            toast.success(
+                user
+                    ? "Usuario actualizado"
+                    : "Usuario creado"
+            );
         } catch (err: any) {
-            setError(err.respone?.data || 'Error al guardar');
+            toast.error(
+                err.response?.data ||
+                "Error al guardar"
+            );
         } finally {
             setLoading(false);
         }
@@ -45,10 +53,6 @@ const UserForm = ({user, onClose, onSuccess}: Props) => {
             <h3 className="font-semibold text-gray-700 mb-3">
                 {user ? 'Editar usuario' : 'Nuevo usuario'}
             </h3>
-
-            {error && (
-                <p className="text-red-500 text-sm mb-3">{error}</p>
-            )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <div>

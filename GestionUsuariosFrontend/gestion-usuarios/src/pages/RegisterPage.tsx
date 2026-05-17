@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import api from '../api/axiosConfig'
 import type {AuthResponse, RegisterRequest} from '../types'
+import { toast } from "sonner";
+import api, {type CustomAxiosRequestConfig} from "../api/axiosConfig";
 
 const RegisterPage = () => {
     const { login } = useAuth()
@@ -13,29 +14,22 @@ const RegisterPage = () => {
         email: '',
         password: '',
     })
-    const [error, setError] = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
 
-    // Actualiza el campo correspondiente cuando el usuario escribe
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault()
-        setError(null)
-        setLoading(true)
 
         try {
-            const response = await api.post<AuthResponse>('/auth/register', form)
-            const { accessToken, refreshToken, user } = response.data
+            const response = await api.post<AuthResponse>('/auth/register', form, {skipGlobalLoading: true} as CustomAxiosRequestConfig);
+            const { accessToken, refreshToken, user } = response.data;
 
-            login(accessToken, refreshToken, user)
-            navigate('/dashboard')
+            login(accessToken, refreshToken, user);
+            navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data || 'Error al registrarse')
-        } finally {
-            setLoading(false)
+            toast.error("Error al registrarse");
         }
     }
 
@@ -45,10 +39,6 @@ const RegisterPage = () => {
                 <h2 className="text-2xl font-bold text-black mb-6 text-center">
                     Crear cuenta
                 </h2>
-
-                {error && (
-                    <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -98,10 +88,17 @@ const RegisterPage = () => {
 
                     <button
                         type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                        {loading ? 'Cargando...' : 'Registrarse'}
+                        className="
+                            w-full
+                            bg-blue-600
+                            text-white
+                            py-2
+                            rounded-lg
+                            hover:bg-blue-700
+                            transition
+                            cursor-pointer
+                        ">
+                        Ingresar
                     </button>
                 </form>
 

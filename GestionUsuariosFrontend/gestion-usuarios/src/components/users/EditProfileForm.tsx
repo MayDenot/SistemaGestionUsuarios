@@ -1,7 +1,8 @@
-import type {ChangePasswordForm, UpdateProfileRequest, User} from "../../types";
-import {useState} from "react";
+import type {ChangePasswordForm, UpdateProfileRequest, User } from "../../types";
+import { useState } from "react";
 import api from "../../api/axiosConfig.ts";
-import {useAuth} from "../../hooks/useAuth.ts";
+import { useAuth } from "../../hooks/useAuth.ts";
+import { toast } from "sonner";
 
 interface Props {
     user: User;
@@ -9,13 +10,11 @@ interface Props {
     onSuccess: () => void;
 }
 
-
-const EditProfileForm = ({
-                             user,
-                             onClose,
-                             onSuccess
-                         }: Props) => {
+const EditProfileForm = ({user, onClose, onSuccess }: Props) => {
     const { updateUser } = useAuth();
+
+    const [loading, setLoading] =
+        useState(false);
 
     const [profileForm, setProfileForm] =
         useState<UpdateProfileRequest>({
@@ -30,18 +29,10 @@ const EditProfileForm = ({
             confirmPassword: '',
         });
 
-    const [loading, setLoading] =
-        useState(false);
-
-    const [profileError, setProfileError] =
-        useState<string | null>(null);
-
-    const [passwordError, setPasswordError] =
-        useState<string | null>(null);
-
     const handleChangeProfileForm = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
+
         setProfileForm({
             ...profileForm,
             [e.target.name]: e.target.value
@@ -51,6 +42,7 @@ const EditProfileForm = ({
     const handleChangePasswordForm = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
+
         setPasswordForm({
             ...passwordForm,
             [e.target.name]: e.target.value
@@ -60,42 +52,43 @@ const EditProfileForm = ({
     const handleSubmit = async (
         e: React.FormEvent<HTMLFormElement>
     ) => {
+
         e.preventDefault();
 
-        setProfileError(null);
-        setPasswordError(null);
+        const shouldChangePassword =
+            passwordForm.currentPassword ||
+            passwordForm.newPassword ||
+            passwordForm.confirmPassword;
+
+        if (
+            shouldChangePassword &&
+            passwordForm.newPassword !==
+            passwordForm.confirmPassword
+        ) {
+
+            toast.error(
+                "Las contraseñas no coinciden"
+            );
+
+            return;
+        }
 
         setLoading(true);
 
         try {
+
             const profileResponse =
                 await api.put(
-                    '/users/me',
+                    "/users/me",
                     profileForm
                 );
 
             updateUser(profileResponse.data);
 
-            const shouldChangePassword =
-                passwordForm.currentPassword ||
-                passwordForm.newPassword ||
-                passwordForm.confirmPassword;
-
             if (shouldChangePassword) {
 
-                if (
-                    passwordForm.newPassword !==
-                    passwordForm.confirmPassword
-                ) {
-                    setPasswordError(
-                        'Las contraseñas no coinciden'
-                    );
-
-                    return;
-                }
-
                 await api.put(
-                    '/users/me/password',
+                    "/users/me/password",
                     {
                         currentPassword:
                         passwordForm.currentPassword,
@@ -106,16 +99,20 @@ const EditProfileForm = ({
                 );
             }
 
+            toast.success(
+                "Perfil actualizado correctamente"
+            );
+
             onSuccess();
+
             onClose();
 
         } catch (err: any) {
 
-            const message =
+            toast.error(
                 err.response?.data ||
-                'Error al guardar';
-
-            setProfileError(message);
+                "Error al guardar"
+            );
 
         } finally {
 
@@ -124,12 +121,28 @@ const EditProfileForm = ({
     };
 
     return (
-        <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm">
+        <div className="
+            bg-white
+            border
+            border-blue-200
+            rounded-2xl
+            p-6
+            shadow-sm
+        ">
 
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            {/* HEADER */}
+            <div className="
+                flex
+                justify-between
+                items-center
+                mb-6
+            ">
 
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h3 className="
+                    text-lg
+                    font-semibold
+                    text-gray-800
+                ">
                     Configuración de perfil
                 </h3>
 
@@ -150,19 +163,22 @@ const EditProfileForm = ({
 
             <form
                 onSubmit={handleSubmit}
-                className="flex flex-col gap-3 text-start"
+                className="
+                    flex
+                    flex-col
+                    gap-4
+                    text-start
+                "
             >
 
                 {/* PROFILE */}
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 className="
+                    text-lg
+                    font-semibold
+                    text-gray-800
+                ">
                     Editar usuario
                 </h3>
-
-                {profileError && (
-                    <p className="text-red-500 text-sm mb-2">
-                        {profileError}
-                    </p>
-                )}
 
                 <div>
                     <label className="
@@ -240,19 +256,21 @@ const EditProfileForm = ({
                     />
                 </div>
 
-                {/* Divider */}
-                <div className="border-t border-gray-200 my-8" />
+                {/* DIVIDER */}
+                <div className="
+                    border-t
+                    border-gray-200
+                    my-4
+                " />
 
                 {/* PASSWORD */}
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 className="
+                    text-lg
+                    font-semibold
+                    text-gray-800
+                ">
                     Cambiar contraseña
                 </h3>
-
-                {passwordError && (
-                    <p className="text-red-500 text-sm mb-2">
-                        {passwordError}
-                    </p>
-                )}
 
                 <div>
                     <label className="
@@ -299,7 +317,7 @@ const EditProfileForm = ({
                         text-gray-700
                         mb-2
                     ">
-                        Contraseña nueva
+                        Nueva contraseña
                     </label>
 
                     <input
@@ -307,7 +325,7 @@ const EditProfileForm = ({
                         name="newPassword"
                         value={passwordForm.newPassword}
                         onChange={handleChangePasswordForm}
-                        placeholder="Contraseña nueva"
+                        placeholder="Nueva contraseña"
                         className="
                             w-full
                             bg-white
@@ -364,8 +382,14 @@ const EditProfileForm = ({
                         "
                     />
                 </div>
+
                 {/* ACTION */}
-                <div className="flex justify-end mt-6">
+                <div className="
+                    flex
+                    justify-end
+                    mt-6
+                ">
+
                     <button
                         type="submit"
                         disabled={loading}
@@ -382,10 +406,11 @@ const EditProfileForm = ({
                         "
                     >
                         {loading
-                            ? 'Guardando...'
-                            : 'Guardar cambios'}
+                            ? "Guardando..."
+                            : "Guardar cambios"}
                     </button>
                 </div>
+
             </form>
         </div>
     );

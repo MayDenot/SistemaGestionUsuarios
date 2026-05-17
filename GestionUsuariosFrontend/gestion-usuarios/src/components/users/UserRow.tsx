@@ -2,6 +2,7 @@ import type {User} from "../../types";
 import {useState} from "react";
 import api from "../../api/axiosConfig.ts";
 import UserForm from './UserForm';
+import { toast } from "sonner";
 
 interface Props {
     user: User,
@@ -18,7 +19,7 @@ const UserRow = ({user, onRefresh}: Props) => {
             await api.delete(`/users/${user.id}`);
             onRefresh();
         } catch (err) {
-            alert('Error al eliminar el usuario');
+            toast.error('Error al eliminar el usuario');
         }
     }
 
