@@ -1,6 +1,7 @@
 package com.example.gestionusuarios.controller;
 
 import com.example.gestionusuarios.dto.request.ChangePasswordRequest;
+import com.example.gestionusuarios.dto.request.UpdateProfileRequest;
 import com.example.gestionusuarios.dto.request.UserRequestDTO;
 import com.example.gestionusuarios.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,18 +85,19 @@ public class UserController {
         return ResponseEntity.ok("Usuario eliminado");
     }
 
-    @Operation(summary = "Cambiar contraseña")
+    @Operation(summary = "Cambiar contraseña de usuario autenticado")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Contraseña actualizada"),
             @ApiResponse(responseCode = "401", description = "Contraseña actual incorrecta"),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
-    @PutMapping("/{id}/password")
+    @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> changePassword(@Parameter(description = "ID del usuario", example = "1")
-              @PathVariable Long id, @RequestBody ChangePasswordRequest dto) {
-        userService.changePassword(id, dto.getCurrentPassword(), dto.getNewPassword());
-        return ResponseEntity.ok("Contraseña actualizada con éxito");
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal UserDetails userDetails,
+                                            @RequestBody ChangePasswordRequest dto) {
+        String email = userDetails.getUsername();
+        userService.changePassword(email, dto.getCurrentPassword(), dto.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Obtener usuario por token")
@@ -108,5 +110,20 @@ public class UserController {
     public ResponseEntity<?> getUserFromToken(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         return ResponseEntity.ok(userService.findByEmail(email));
+    }
+
+    @Operation(summary = "Actualizar perfil del usuario autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    @PutMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateUserAuthenticated(@AuthenticationPrincipal UserDetails userDetails,
+                                                     @RequestBody UpdateProfileRequest request) {
+        String email = userDetails.getUsername();
+        return ResponseEntity.ok(
+                userService.updateProfile(email, request)
+        );
     }
 }

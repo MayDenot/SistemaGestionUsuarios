@@ -49,4 +49,11 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error interno del servidor");
     }
+
+    @ExceptionHandler(SamePasswordException.class)
+    public ResponseEntity<?> handleSamePassword(SamePasswordException e) {
+        return ResponseEntity
+                .badRequest()
+                .body(e.getMessage());
+    }
 }

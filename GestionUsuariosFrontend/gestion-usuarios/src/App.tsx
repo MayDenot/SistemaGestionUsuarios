@@ -5,6 +5,7 @@ import PrivateRoute from './components/PrivateRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import ProfilePage from "./pages/ProfilePage.tsx";
 
 function App() {
 
@@ -21,6 +22,8 @@ function App() {
                         <DashboardPage />
                     </PrivateRoute>
                 }/>
+
+                <Route path="/me" element={<ProfilePage />} />
 
                 {/* Cualquier ruta desconocida redirige a login */}
                 <Route path="*" element={<Navigate to="/login"/>} />

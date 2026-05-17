@@ -2,16 +2,15 @@ import type {User} from "../types";
 import {createContext, type ReactNode, useEffect, useState} from "react";
 
 interface AuthContextType {
-    user : User | null
-    token: string | null
-    login: (token: string, refreshToken: string, user: User) => void
-    logout: () => void
+    user : User | null,
+    token: string | null,
+    updateUser: (user: User) => void,
+    login: (token: string, refreshToken: string, user: User) => void,
+    logout: () => void,
 }
 
-// Crea el contexto vacio
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-// El provider envuelve toda la app y provee el estado
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
@@ -24,6 +23,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(JSON.parse(savedUser));
         }
     }, []);
+
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
+    };
 
     const login = (accessToken: string, refreshToken: string, user: User) => {
         localStorage.setItem("accessToken", accessToken);
@@ -40,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-      <AuthContext.Provider value={{user, token, login, logout}}>
+      <AuthContext.Provider value={{user, token, updateUser, login, logout}}>
           {children}
       </AuthContext.Provider>
     );

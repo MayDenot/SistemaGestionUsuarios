@@ -26,3 +26,17 @@ export interface UserRequestDTO {
     name: string,
     email: string,
 }
+
+export interface ChangePasswordRequest {
+    currentPassword: string,
+    newPassword: string,
+}
+
+export interface UpdateProfileRequest {
+    name: string,
+    email: string,
+}
+
+export interface ChangePasswordForm extends ChangePasswordRequest {
+    confirmPassword: string;
+}
