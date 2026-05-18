@@ -40,3 +40,13 @@ export interface UpdateProfileRequest {
 export interface ChangePasswordForm extends ChangePasswordRequest {
     confirmPassword: string;
 }
+
+export interface PageResponse<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+}

@@ -28,8 +28,8 @@ public class UserService {
     public Page<UserResponseDTO> findAll(String name, String email, String role, Pageable pageable) {
         Specification<User> spec = Specification
                 .where(UserSpecification.hasName(name))
-                .and(UserSpecification.hasEmail(email))
-                .and(UserSpecification.hasRole(role));
+                .or(UserSpecification.hasEmail(email))
+                .or(UserSpecification.hasRole(role));
 
         return userRepository.findAll(spec, pageable)
                 .map(UserMapper::toResponse);
